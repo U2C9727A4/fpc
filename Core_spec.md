@@ -79,7 +79,7 @@ No request headers.
 This RPC may not fail.  
 
 ## 1, GetVersion
-This RPC gets the FPC version(s) the server supports.
+This RPC gets the FPC version(s) the server supports. (Specifically, queries a list of version(s) the server supports. The index 0 is the oldest version supported.)
 
 ### Request headers
 0..4, u32, n, The n'th version the server supports is being requested
