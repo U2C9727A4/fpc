@@ -1,5 +1,5 @@
 # File Procedure Call Core v0
-##### Document revision: 1
+##### Document revision: 2
 
 This document ("Core") documents the FPC Core (v0.0 and above minor releases). and architecture that may not change accross FPC versions.
 The FPC Core is used for version and MTU negotion before FPC can be used. (Protocol discovery)
@@ -22,6 +22,13 @@ Major version 0 is reserved for Core.
 A minor version is a version that must be backwards compatible (AKA a superset) of minor version before it.
 a minor version is an u8 on the wire. A minor version can be at maximum, 255.
 
+If a server recieves a major version it does not support, it must terminate the connection.
+If a server recieves a minor version higher than what it supports for the given major version, the connection must be terminated. (a v1.0 server may not accept requests made for v1.5)
+
+If a client recieves a major version that it does not support on a response from the server, it must terminate the connection.
+If a client recieves a minor version higher than it supports for given major version on a response from the server, it must accept it (Since further minor releases are supersets of previous minor releases)
+If a client recieves a minor version lower than minor version it supports, it must terminate the connection. 
+
 # FPC Headers
 The headers (and wire format) defined as below may NOT change accross FPC versions.
 (On the positions, left side is inclusive while the right side isn't. Position 0 comes first (transmitted first). Zig-style types are used)
@@ -31,12 +38,16 @@ The headers (and wire format) defined as below may NOT change accross FPC versio
 0..4, u32, Frame_len, This header defines the total lenght of the entire transmission. (Including itself).
 4..6, u16, Major_Ver, This header specifies which major version this frame conforms to.
 6..7, u8,  Minor_Ver, This header specifies which minor version this frame conforms to.
-7..8, u8,  Frame_Type, This header specifies the type of the frame. This header may also be used to specify what operation the frame is doing.
+7..8, u8,  RPCID, This header specifies the ID of the RPC function being invoked.
 
-## Frame Type
-The frame type defines what the frame's type is; It is a u8 on the wire
-The highest bit is used as the response bit; as a side effect the maximum frame type on the wire is 127.
-The frame type(s) may also be used as RPC IDs by FPC versions.
+On server response, the Major version MUST be echoed back
+Minor version may not be lower than the requested minor version, but may be higher. (A client sending a v1.0 frame must be able accept a response frame whoose version is v1.5)  
+RPCID Must be set the response pair
+
+## RPC ID
+The RPC ID addresses RPCs that may be used.
+The highest bit of the RPCID is used for the corresponding response.
+(For example, an RPCID of 5 has a corresponding response RPCID of (5 | 0x80) = 133)
 
 
 # General Architecture
@@ -53,10 +64,23 @@ Due to its nature, FPC versions must implement capability discovery themselves.
 ## Server multi-versioning
 FPC servers must support multiple major versions running on the same connection.  
 For example, connection cA has a server that supports v0.X (Core) and v1.0.
-The client can issue v0.X frames to discover the limits and the versions the server supports, and then later switch to using v1.0 frames, without a dedicated RPC for version switching.
-Conversely, if the client already knows the version(s) the server supports, they may skip version negotion entirely (not using v0.X) and use the frame versions the server supports.
+The client can issue v0.X frames to discover the limits and the versions the server supports, and then later switch to using v1.0 RPCs, without a dedicated RPC for version switching.
+Conversely, if the client already knows the version(s) the server supports, they may skip version negotion entirely (not using v0.X) and use the RPC versions the server supports.
 
 Only the maximum minor version of a major version the server supports may be advertised, to reduce version negotiation times. (This is fine, because minor versions are backwards-compatible.). 
+
+If a server gets a request frame with an unkown or unsupported version, it must terminate the connection.
+All servers must support **At least** Core v0.0
+
+# -------------------- CORE SPECIFIC (v0.0) --------------------------
+
+# Architecture
+FPC Core is strictly synchronus request-response. Other FPC versions are not forced to this however.
+A transaction goes like this:
+Client connects
+Client sends a request
+Server responds
+go back to beginning
 
 # Core RPCs
 FPC core supports the following RPCs:
