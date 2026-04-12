@@ -27,7 +27,6 @@ If a server recieves a minor version higher than what it supports for the given 
 
 If a client recieves a major version that it does not support on a response from the server, it must terminate the connection.
 If a client recieves a minor version higher than it supports for given major version on a response from the server, it must accept it (Since further minor releases are supersets of previous minor releases)
-If a client recieves a minor version lower than minor version it supports, it must terminate the connection. 
 
 # FPC Headers
 The headers (and wire format) defined as below may NOT change accross FPC versions.
