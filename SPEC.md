@@ -1,7 +1,7 @@
 # File Procedure Call v1.0
 FPC is a protocol designed for file access over a reliable, sequential and robust bytestreams, Mainly intended for embedded systems wanting to expose their resources in a file-like API.  
 # Document revision 1
-# WARNING: This document is currently marked as incomplete
+# WARNING: This document is a draft document, not the real spec.
 
 # Data types used in this document  
 u32 = Unsigned 32 bit integer  
